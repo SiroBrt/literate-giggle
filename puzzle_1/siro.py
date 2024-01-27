@@ -1,6 +1,6 @@
 # Datos iniciales. No hay validación de input
-p = [3, 10, 5]
-r = [2, 4, 4]
+p = [3, 5, 7]
+r = [2, 1, 3]
 
 n = r[0]
 sumando = p[0]
