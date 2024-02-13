@@ -7,8 +7,8 @@ struct posicion {
 };
 
 // Variables globales
-#define WIDTH 8
-#define HEIGHT 8
+#define WIDTH 6
+#define HEIGHT 6
 
 bool visitados[WIDTH * HEIGHT] = {false};
 std::vector<posicion> camino;
@@ -17,7 +17,10 @@ int no_visitados = WIDTH * HEIGHT;
 void imprimir_tablero (int tablero[HEIGHT][WIDTH]) {
   // Imprime un tablero de ajedrez con arte ASCII
   for (int i = 0; i < HEIGHT; i++) {
-    std::cout << "+--+--+--+--+--+--+--+--+" << std::endl;
+    for (int j = 0; j < WIDTH; j++) {
+      std::cout << "+--";
+    }
+    std::cout << "+" << std::endl;
     for (int j = 0; j < WIDTH; j++) {
       // Imprimir el número con un ancho de 2
       std::cout << "|";
@@ -28,7 +31,10 @@ void imprimir_tablero (int tablero[HEIGHT][WIDTH]) {
     }
     std::cout << "|" << std::endl;
   }
-  std::cout << "+--+--+--+--+--+--+--+--+" << std::endl;
+  for (int j = 0; j < WIDTH; j++) {
+    std::cout << "+--";
+  }
+  std::cout << "+" << std::endl;
 }
 
 int indice_de(posicion pos) {
@@ -44,7 +50,7 @@ bool es_valida(posicion pos) {
 
 std::vector<posicion> sucesores(posicion pos) {
   // Devuelve un vector con las posiciones válidas y sin aún sin visitar
-  // a las que se puede mover el rey desde pos
+  // a las que se puede mover el caballo desde pos
   std::vector<posicion> res = {};
   if (es_valida({pos.x - 1, pos.y - 2})) {
     res.push_back({pos.x - 1, pos.y - 2});
@@ -69,7 +75,6 @@ std::vector<posicion> sucesores(posicion pos) {
   }
   if (es_valida({pos.x - 2, pos.y + 1})) {
     res.push_back({pos.x - 2, pos.y + 1});
-  
   }
   return res;
 }
