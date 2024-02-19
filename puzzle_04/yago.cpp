@@ -14,8 +14,8 @@ bool visitados[WIDTH * HEIGHT] = {false};
 std::vector<posicion> camino;
 int no_visitados = WIDTH * HEIGHT;
 
+// Imprime un tablero de ajedrez con arte ASCII
 void imprimir_tablero (int tablero[HEIGHT][WIDTH]) {
-  // Imprime un tablero de ajedrez con arte ASCII
   for (int i = 0; i < HEIGHT; i++) {
     for (int j = 0; j < WIDTH; j++) {
       std::cout << "+--";
@@ -37,20 +37,20 @@ void imprimir_tablero (int tablero[HEIGHT][WIDTH]) {
   std::cout << "+" << std::endl;
 }
 
+// Devuelve el índice de la posición en el tablero
 int indice_de(posicion pos) {
-  // Devuelve el índice de la posición en el tablero
   return pos.x + pos.y * WIDTH;
 }
 
+// Devuelve true si la posición está dentro del tablero y no ha sido visitada
 bool es_valida(posicion pos) {
-  // Devuelve true si la posición está dentro del tablero y no ha sido visitada
   return (pos.x >= 0) && (pos.x < WIDTH) && (pos.y >= 0) && (pos.y < HEIGHT)
     && (visitados[indice_de(pos)] == false);
 }
 
+// Devuelve un vector con las posiciones válidas y sin aún sin visitar
+// a las que se puede mover el caballo desde pos
 std::vector<posicion> sucesores(posicion pos) {
-  // Devuelve un vector con las posiciones válidas y sin aún sin visitar
-  // a las que se puede mover el caballo desde pos
   std::vector<posicion> res = {};
   if (es_valida({pos.x - 1, pos.y - 2})) {
     res.push_back({pos.x - 1, pos.y - 2});
@@ -79,9 +79,9 @@ std::vector<posicion> sucesores(posicion pos) {
   return res;
 }
 
+// Comprueba si se puede recorrer el tablero con un recorrido en profundidad
+// empezando en la posición pos
 bool dfs(posicion pos) {
-  // Recorre el tablero con un recorrido en profundidad desde pos
-
   // Caso base: si no hay posiciones sin visitar, se encontró solución
   if (no_visitados == 0) {
     return true;

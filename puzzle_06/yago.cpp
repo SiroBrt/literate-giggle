@@ -947,8 +947,8 @@ std::vector<int> secuencia = {
 
 //////////////////////////////////////////////////////////////////////////////
 
+// Devuelve el elemento i de la secuencia
 int seqElem(int i) {
-  // Devuelve el elemento i de la secuencia
   if (i < 0 || i >= secuencia.size()) {
     return ERROR;
   }
