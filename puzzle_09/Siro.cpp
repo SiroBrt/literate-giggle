@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -23,9 +22,8 @@ struct batalla {
 };
 
 void solve(vector<batalla> escenario) {
-  sort(escenario.begin(), escenario.end());
   int max = 0, resta = 0, aux;
-  for (int i = escenario.size() - 1; i >= 0; i--) {
+  for (int i = 0; i < escenario.size(); i++) {
     aux = escenario[i].soldados + resta;
     if (max < aux) {
       max = aux;
@@ -41,17 +39,30 @@ void solve(vector<batalla> escenario) {
 int main() {
   int lines, num;
   vector<batalla> escenario;
+  auto it = escenario.begin();
+  bool found = false;
   while (cin >> lines) {
-    escenario.clear();
     if (lines == 0) {
       break;
-    } else {
-      for (int i = 0; i < lines; i++) {
-        batalla linea;
-        cin >> linea.soldados;
-        cin >> linea.perdidas;
-        cin >> num;
-        linea.perdidas += num;
+    }
+    escenario.clear();
+    for (int i = 0; i < lines; i++) {
+      batalla linea;
+      found = false;
+      it = escenario.begin();
+      cin >> linea.soldados;
+      cin >> linea.perdidas;
+      cin >> num;
+      linea.perdidas += num;
+      for (int ii = 0; ii < escenario.size(); ii++) {
+        if (escenario[ii] < linea) {
+          escenario.insert(it, linea);
+          found = true;
+          break;
+        }
+        it++;
+      }
+      if (not found) {
         escenario.push_back(linea);
       }
     }
