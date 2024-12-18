@@ -1,5 +1,5 @@
 Dado un número n, rellenar un cuadrado de tamaño n x n con el menor número de
-bloques de tamaños hasta n-1 de forma que no quede ningún hueco, ni se solapen
+bloques cuadrados de tamaños hasta n-1 de forma que no quede ningún hueco, ni se solapen
 
 # Ejemplo
 **Formato:**
