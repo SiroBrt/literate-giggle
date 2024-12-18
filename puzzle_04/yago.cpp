@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -94,7 +95,7 @@ bool dfs(posicion pos) {
   }
 
   // Llamada recursiva
-  for (int i = 0; i < s.size(); i++) {
+  for (uint64_t i = 0; i < s.size(); i++) {
     // Marca el movimiento en el tablero
     visitados[indice_de(s[i])] = true;
     no_visitados--;
@@ -123,11 +124,11 @@ int main () {
   no_visitados--;
 
   bool res = dfs(pos);
-  if (dfs(pos)) {
+  if (res) {
     int tablero[HEIGHT][WIDTH] = {0};
     // Si se encontró solución, se imprime el camino
     std::cout << "Solución encontrada" << std::endl;
-    for (int i = 0; i < camino.size(); i++) {
+    for (uint64_t i = 0; i < camino.size(); i++) {
       tablero[camino[i].y][camino[i].x] = i + 1;
       
     }

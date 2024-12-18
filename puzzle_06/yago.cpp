@@ -1,4 +1,5 @@
 #include <climits>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -948,8 +949,8 @@ std::vector<int> secuencia = {
 //////////////////////////////////////////////////////////////////////////////
 
 // Devuelve el elemento i de la secuencia
-int seqElem(int i) {
-  if (i < 0 || i >= secuencia.size()) {
+int seqElem(uint64_t i) {
+  if (i >= secuencia.size()) {
     return ERROR;
   }
   return secuencia[i];

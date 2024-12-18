@@ -9,8 +9,14 @@ Cada caso de prueba comienza con el número 1 ≤ N ≤ 1.000 de bases enemigas.
 Un caso sin bases, que no deberá procesarse, marca el final.
 
 # Ejemplo
+2
+100 0 10
+90 30 20
+Solución: 100
 3
 50 40 20
 20 20 30
 50 10 5
 Solución: 125
+
+NOTA: Para conseguir conquistar las tres bases del segundo ejemplo con 125 soldados hay que empezar conquistando la última (50 10 5). El orden en el que se ataquen después las otras dos es indiferente.
