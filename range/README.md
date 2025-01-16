@@ -9,3 +9,5 @@ Ejemplo:
 5 . * .
 . . . .
 . 7 . .
+
+Pongo espacios para aceptar numeros de 2 cifras sin que el parser se muera
