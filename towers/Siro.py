@@ -1,3 +1,6 @@
+import time
+
+
 def leer_tablero():
     file = open("tablero.txt", 'r')
     temp = file.read()
@@ -68,6 +71,16 @@ def fill(n, tablero, posibilidades, pos, num):
     return
 
 
+def extraer_linea(n, tablero, pov, lado):
+    if lado % 2 == 0:
+        linea = [tablero[pov + n * i] for i in range(n)]
+    else:
+        linea = [tablero[pov * n + i] for i in range(n)]
+    if lado == 1 or lado == 2:
+        linea.reverse()
+    return linea
+
+
 def get_it(n, pov, lado):
     match lado:
         case 0:
@@ -122,46 +135,57 @@ def vision_count(n, tablero, pov, lado):
     return count
 
 
+def extraer_vision(n, tablero, pov, lado):
+    lista = []
+    alto = 0
+    it = 0
+    increment = 0
+    it, increment = get_it(n, pov, lado)
+    for i in range(n):
+        if tablero[it] > alto:
+            alto = tablero[it]
+            lista.append(alto)
+        it += increment
+    return lista
+
+
 def check(n, borde, tablero, posibilidades):
     for i in range(4 * n):
         if (borde[int(i / n)][i % n] != 0):
             linea = extraer_linea(n, tablero, i % n, int(i / n))
             visto = vision_count(n, tablero, i % n, int(i / n))
             hay_que_ver = borde[int(i / n)][i % n]
-            if visto > hay_que_ver:
-                return 0
             if 0 not in linea and visto != hay_que_ver:
+                # print(f"no suficiente a la vista en lado {int(i/n)}, pov {i%n}")
                 return 0
-    temp = []
+            if n in linea:
+                linea = linea[:linea.index(n)]
+            if 0 not in linea and visto > hay_que_ver:
+                # print(f"demasiado a la vista en lado {int(i/n)}, pov {i%n}")
+                return 0
+    row = []
+    col = []
     for i in range(n):
-        # filas distintas
         for j in range(n):
-            if tablero[i * n + j] in temp:
+            # filas distintas
+            if tablero[i * n + j] in row:
+                # print(f"fila {i} repe")
                 return 0
             if tablero[i * n + j] != 0:
-                temp.append(tablero[i * n + j])
-        temp.clear()
-        # columnas distintas
-        for j in range(n):
-            if tablero[i + n * j] in temp:
+                row.append(tablero[i * n + j])
+            # columnas distintas
+            if tablero[i + n * j] in col:
+                # print(f"columna {i} repe")
                 return 0
             if tablero[i + n * j] != 0:
-                temp.append(tablero[i + n * j])
-        temp.clear()
+                col.append(tablero[i + n * j])
+        row.clear()
+        col.clear()
     for i in range(n**2):
         if tablero[i] == 0 and posibilidades[i] == []:
+            # print(f"vacio en {i}")
             return 0
     return 1
-
-
-def extraer_linea(n, tablero, pov, lado):
-    if lado % 2 == 0:
-        linea = [tablero[pov + n * i] for i in range(n)]
-    else:
-        linea = [tablero[pov * n + i] for i in range(n)]
-    if lado == 1 or lado == 2:
-        linea.reverse()
-    return linea
 
 
 def grupos(n, tablero, posibilidades, pos):
@@ -195,34 +219,33 @@ def grupos(n, tablero, posibilidades, pos):
 def subir_lower_bound(n, borde, tablero, posibilidades, pov, lado):
     cambio = 0
     it, increment = get_it(n, pov, lado)
-    if borde[lado][pov] == 2 and posibilidades[it] != []:
-        linea = extraer_linea(n, tablero, pov, lado)
-        if n in linea:
-            index = linea.index(n)
-            if index > 1:
-                suelo = 0
-                for i in range(1, index):
-                    if posibilidades[it + i * increment] == []:
-                        suelo = max(suelo, tablero[it + i * increment])
-                    else:
-                        suelo = max(suelo, posibilidades[it + i * increment][0])
-                # print(f"suelo {suelo}")
-                if posibilidades[it][0] <= suelo:
-                    for i in range(len(posibilidades[it])):
-                        if posibilidades[it][0] <= suelo:
-                            posibilidades[it].remove(posibilidades[it][0])
+    linea = extraer_linea(n, tablero, pov, lado)
+    if borde[lado][pov] == 2 and posibilidades[it] != [] and n in linea:
+        index = linea.index(n)
+        if index > 1:
+            suelo = 0
+            for i in range(1, index):
+                if posibilidades[it + i * increment] == []:
+                    suelo = max(suelo, tablero[it + i * increment])
+                else:
+                    suelo = max(suelo, posibilidades[it + i * increment][0])
+            # print(f"suelo {suelo}")
+            if posibilidades[it][0] <= suelo:
+                for i in range(len(posibilidades[it])):
+                    if posibilidades[it][0] <= suelo:
+                        posibilidades[it].remove(posibilidades[it][0])
+                        cambio = 1
+            if posibilidades[it] == []:
+                return -10
+            techo = posibilidades[it][-1]
+            for i in range(1, index):
+                if posibilidades[it + i * increment] == []:
+                    continue
+                if techo <= posibilidades[it + i * increment][-1]:
+                    for j in range(techo, n):
+                        if j in posibilidades[it + i * increment]:
+                            posibilidades[it + i * increment].remove(j)
                             cambio = 1
-                if posibilidades[it] == []:
-                    return -1
-                techo = posibilidades[it][-1]
-                for i in range(1, index):
-                    if posibilidades[it + i * increment] == []:
-                        continue
-                    if techo <= posibilidades[it + i * increment][-1]:
-                        for j in range(techo, n):
-                            if j in posibilidades[it + i * increment]:
-                                posibilidades[it + i * increment].remove(j)
-                                cambio = 1
 
     return cambio
 
@@ -275,6 +298,8 @@ def profundidad(n, borde, tablero, posibilidades, d):
     # imprimir_tablero(n, posibilidades)
     force_advance(n, borde, tablero, posibilidades)
     if not check(n, borde, tablero, posibilidades):
+        # print("fallo")
+        # imprimir_tablero(n, tablero)
         return 0
     if 0 in tablero:
         pos = tablero.index(0)
@@ -309,10 +334,14 @@ def solve():
     initial_advance(n, borde, tablero, posibilidades)
     force_advance(n, borde, tablero, posibilidades)
     imprimir_tablero(n, tablero)
+    print()
     if not profundidad(n, borde, tablero, posibilidades, 0):
         print("no es posible")
+        # imprimir_tablero(n, posibilidades)
         return
     return
 
 
+t = time.time()
 solve()
+print(f"solved in {time.time() - t}")
