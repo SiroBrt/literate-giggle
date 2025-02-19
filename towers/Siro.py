@@ -122,10 +122,16 @@ def vision_count(n, tablero, pov, lado):
     return count
 
 
-def check(n, borde, tablero):
+def check(n, borde, tablero, posibilidades):
     for i in range(4 * n):
-        if borde[int(i / n)][i % n] != 0 and vision_count(n, tablero, i % n, int(i / n)) > borde[int(i / n)][i % n]:
-            return 0
+        if (borde[int(i / n)][i % n] != 0):
+            linea = extraer_linea(n, tablero, i % n, int(i / n))
+            visto = vision_count(n, tablero, i % n, int(i / n))
+            hay_que_ver = borde[int(i / n)][i % n]
+            if visto > hay_que_ver:
+                return 0
+            if 0 not in linea and visto != hay_que_ver:
+                return 0
     temp = []
     for i in range(n):
         # filas distintas
@@ -142,6 +148,9 @@ def check(n, borde, tablero):
             if tablero[i + n * j] != 0:
                 temp.append(tablero[i + n * j])
         temp.clear()
+    for i in range(n**2):
+        if tablero[i] == 0 and posibilidades[i] == []:
+            return 0
     return 1
 
 
@@ -203,6 +212,8 @@ def subir_lower_bound(n, borde, tablero, posibilidades, pov, lado):
                         if posibilidades[it][0] <= suelo:
                             posibilidades[it].remove(posibilidades[it][0])
                             cambio = 1
+                if posibilidades[it] == []:
+                    return -1
                 techo = posibilidades[it][-1]
                 for i in range(1, index):
                     if posibilidades[it + i * increment] == []:
@@ -258,18 +269,50 @@ def force_advance(n, borde, tablero, posibilidades):
     return
 
 
-n, borde, tablero = leer_tablero()
-posibilidades = [[] for i in range(n**2)]
-for i in posibilidades:
-    for j in range(1, n + 1):
-        i.append(j)
-initial_advance(n, borde, tablero, posibilidades)
-force_advance(n, borde, tablero, posibilidades)
-# bajar_upper_bound(n, borde, tablero, posibilidades, 0, 0)
-# subir_lower_bound(n, borde, tablero, posibilidades, 0, 0)
+def profundidad(n, borde, tablero, posibilidades, d):
+    # print(f"profundidad {d}")
+    # imprimir_tablero(n, tablero)
+    # imprimir_tablero(n, posibilidades)
+    force_advance(n, borde, tablero, posibilidades)
+    if not check(n, borde, tablero, posibilidades):
+        return 0
+    if 0 in tablero:
+        pos = tablero.index(0)
+        tablero_copy = []
+        posibilidades_copy = []
+        for i in range(len(posibilidades[pos])):
 
-print(borde)
-imprimir_tablero(n, tablero)
-imprimir_tablero(n, posibilidades)
-# print(check(n, borde, tablero))
+            tablero_copy = [j for j in tablero]
+            posibilidades_copy.clear()
+            for j in range(n**2):
+                posibilidades_copy.append([k for k in posibilidades[j]])
 
+            fill(n, tablero_copy, posibilidades_copy, pos, posibilidades[pos][0])
+            if not profundidad(n, borde, tablero_copy, posibilidades_copy, d + 1):
+                posibilidades[pos].pop(0)
+            else:
+                posibilidades = posibilidades_copy
+                tablero = tablero_copy
+                return 1
+    else:
+        print("encontrado")
+        imprimir_tablero(n, tablero)
+        return 1
+
+
+def solve():
+    n, borde, tablero = leer_tablero()
+    posibilidades = [[] for i in range(n**2)]
+    for i in posibilidades:
+        for j in range(1, n + 1):
+            i.append(j)
+    initial_advance(n, borde, tablero, posibilidades)
+    force_advance(n, borde, tablero, posibilidades)
+    imprimir_tablero(n, tablero)
+    if not profundidad(n, borde, tablero, posibilidades, 0):
+        print("no es posible")
+        return
+    return
+
+
+solve()
