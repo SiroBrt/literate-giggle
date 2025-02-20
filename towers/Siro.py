@@ -216,6 +216,7 @@ def grupos(n, tablero, posibilidades, pos):
     return cambios
 
 
+# podria ser mucho mas potente
 def subir_lower_bound(n, borde, tablero, posibilidades, pov, lado):
     cambio = 0
     it, increment = get_it(n, pov, lado)
@@ -292,8 +293,7 @@ def force_advance(n, borde, tablero, posibilidades):
     return
 
 
-def profundidad(n, borde, tablero, posibilidades, d):
-    # print(f"profundidad {d}")
+def profundidad(n, borde, tablero, posibilidades):
     # imprimir_tablero(n, tablero)
     # imprimir_tablero(n, posibilidades)
     force_advance(n, borde, tablero, posibilidades)
@@ -313,7 +313,7 @@ def profundidad(n, borde, tablero, posibilidades, d):
                 posibilidades_copy.append([k for k in posibilidades[j]])
 
             fill(n, tablero_copy, posibilidades_copy, pos, posibilidades[pos][0])
-            if not profundidad(n, borde, tablero_copy, posibilidades_copy, d + 1):
+            if not profundidad(n, borde, tablero_copy, posibilidades_copy):
                 posibilidades[pos].pop(0)
             else:
                 posibilidades = posibilidades_copy
@@ -335,7 +335,7 @@ def solve():
     force_advance(n, borde, tablero, posibilidades)
     imprimir_tablero(n, tablero)
     print()
-    if not profundidad(n, borde, tablero, posibilidades, 0):
+    if not profundidad(n, borde, tablero, posibilidades):
         print("no es posible")
         # imprimir_tablero(n, posibilidades)
         return
@@ -344,4 +344,4 @@ def solve():
 
 t = time.time()
 solve()
-print(f"solved in {time.time() - t}")
+print(f"solved in {round(time.time() - t,8)}s")
