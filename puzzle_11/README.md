@@ -11,3 +11,10 @@ K lineas con la posición x, y, y la longitud de ese cuadrado
 1 3 2
 3 1 2
 3 3 2
+
+visualizacion:
+. .|. .
+. .|. .
+---+---
+. .|. .
+. .|. .
