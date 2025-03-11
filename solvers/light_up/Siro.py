@@ -108,6 +108,43 @@ def contar_alrededor(tablero, n):
     return wanted, count, hueco
 
 
+def iluminado(tablero, n):
+    if tablero[n] == -3:
+        return 1
+    it = n + 1
+    while it % size[0] != 0:
+        if tablero[it] == -3:
+            return 1
+        if tablero[it] >= 0:
+            break
+        it += 1
+
+    it = n - 1
+    while it % size[0] != size[0] - 1:
+        if tablero[it] == -3:
+            return 1
+        if tablero[it] >= 0:
+            break
+        it -= 1
+
+    it = n + size[0]
+    while it < size[0] * size[1]:
+        if tablero[it] == -3:
+            return 1
+        if tablero[it] >= 0:
+            break
+        it += size[0]
+
+    it = n - size[0]
+    while it >= 0:
+        if tablero[it] == -3:
+            return 1
+        if tablero[it] >= 0:
+            break
+        it -= size[0]
+    return 0
+
+
 def rellenar_numero(tablero, n):
     wanted, count, hueco = contar_alrededor(tablero, n)
     if wanted < count:
@@ -135,6 +172,8 @@ def rellenar_numero(tablero, n):
 
 def posibles_fuentes(tablero, n):
     lista = []
+    if iluminado(tablero, n):
+        return [0, 0, 0]
     if tablero[n] == -1:
         lista.append(n)
     it = n + 1
@@ -175,13 +214,13 @@ def logic(tablero):
     copia = []
     while tablero != copia:
         copia = [i for i in tablero]
-        print("iteracion")
+        # print("iteracion")
         for i in range(len(tablero)):
             match tablero[i]:
                 case 0 | 1 | 2 | 3 | 4:
                     if rellenar_numero(tablero, i) == -1:
                         return -1
-                case -1:
+                case -1 | -2:
                     lista = posibles_fuentes(tablero, i)
                     match len(lista):
                         case 0:
@@ -191,9 +230,57 @@ def logic(tablero):
                                 return -1
 
 
-# add_faro(board, 3)
-# add_faro(board, 1)
+def check_alrededor(tablero, n):
+    wanted, count, hueco = contar_alrededor(tablero, n)
+    if count > wanted:
+        return 0
+    if wanted - count > len(hueco):
+        return 0
+    return 1
+
+
+def check(tablero):
+    for i in range(len(tablero)):
+        match tablero[i]:
+            case -3:
+                tablero[i] = 0
+                if iluminado(tablero, i):
+                    tablero[i] = -3
+                    return 0
+                else:
+                    tablero[i] = -3
+            case 0 | 1 | 2 | 3 | 4:
+                if check_alrededor(tablero, i) == 0:
+                    return 0
+            case -2:
+                if iluminado(tablero, i) == 0 and len(posibles_fuentes(tablero, i)) == 0:
+                    return 0
+    return 1
+
+
+def profundidad(tablero):
+    logic(tablero)
+    if check(tablero) == 0:
+        return -1
+    if -1 in tablero:
+        copia = [i for i in tablero]
+        it = copia.index(-1)
+        add_faro(copia, it)
+        if profundidad(copia) == 1:
+            return 1
+        else:
+            tablero[it] = -2
+            copia = [i for i in tablero]
+            if profundidad(copia) == 1:
+                return 1
+            else:
+                return -1
+    print_tablero(tablero)
+    return 1
+
+
 # print(rellenar_numero(board, 44))
-logic(board)
 print_tablero(board)
+print("-" * (size[0] * 2 - 1))
+profundidad(board)
 # print(posibles_fuentes(board, 12))
