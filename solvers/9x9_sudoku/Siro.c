@@ -177,93 +177,61 @@ void marcar(struct board *tablero, int pos, int valor) {
   }
 }
 
-void unico_col(struct board *tablero) {
-  int vistos[9], pos;
-  for (int col = 0; col < 9; col++) {
-    // printf("\ncuad: %d\n", cuad);
+void unico_en_set(struct board *tablero) {
+  int cambio = 0, vistos_cuad[9], vistos_fila[9], vistos_col[9], pos_cuad,
+      pos_fila, pos_col;
+  for (int set = 0; set < 9; set++) {
     for (int it = 0; it < 9; it++) {
-      vistos[it] = 0;
+      vistos_cuad[it] = 0;
+      vistos_fila[it] = 0;
+      vistos_col[it] = 0;
     }
 
+    // contamos cuantos de cada numero hay en fila, columna y cuadrado
     for (int it = 0; it < 9; it++) {
-      pos = col + 9 * it;
-      for (int i = 0; i < 9; i++) { // vistos += posibilidades[cuad_it(cuad,it)]
-        vistos[i] += tablero->posibilidades[pos][i];
+      pos_cuad = cuad_it(set, it);
+      pos_fila = set * 9 + it;
+      pos_col = set + 9 * it;
+      for (int i = 0; i < 9; i++) {
+        vistos_cuad[i] += tablero->posibilidades[pos_cuad][i];
+        vistos_fila[i] += tablero->posibilidades[pos_fila][i];
+        vistos_col[i] += tablero->posibilidades[pos_col][i];
       }
     }
 
+    // si hay numeros con una sola posicion posible lo marcamos
     for (int i = 0; i < 9; i++) {
-      // printf("%ds vistos: %d\n", i + 1, vistos[i]);
-      if (vistos[i] != 1) {
-        continue;
+      if (vistos_cuad[i] == 1) {
+        for (int it = 0; it < 9; it++) {
+          pos_cuad = cuad_it(set, it);
+          if (tablero->posibilidades[pos_cuad][i] == 1) {
+            marcar(tablero, pos_cuad, i + 1);
+            cambio = 1;
+          }
+        }
       }
-      for (int it = 0; it < 9; it++) {
-        pos = col + 9 * it;
-        if (tablero->posibilidades[pos][i] == 1) {
-          marcar(tablero, pos, i + 1);
+      if (vistos_fila[i] == 1) {
+        for (int it = 0; it < 9; it++) {
+          pos_fila = set * 9 + it;
+          if (tablero->posibilidades[pos_fila][i] == 1) {
+            marcar(tablero, pos_fila, i + 1);
+            cambio = 1;
+          }
+        }
+      }
+      if (vistos_col[i] == 1) {
+        for (int it = 0; it < 9; it++) {
+          pos_col = set + 9 * it;
+          if (tablero->posibilidades[pos_col][i] == 1) {
+            marcar(tablero, pos_col, i + 1);
+            cambio = 1;
+          }
         }
       }
     }
   }
-}
-
-void unico_fila(struct board *tablero) {
-  int vistos[9], pos;
-  for (int fila = 0; fila < 9; fila++) {
-    // printf("\ncuad: %d\n", cuad);
-    for (int it = 0; it < 9; it++) {
-      vistos[it] = 0;
-    }
-
-    for (int it = 0; it < 9; it++) {
-      pos = fila * 9 + it;
-      for (int i = 0; i < 9; i++) { // vistos += posibilidades[cuad_it(cuad,it)]
-        vistos[i] += tablero->posibilidades[pos][i];
-      }
-    }
-
-    for (int i = 0; i < 9; i++) {
-      // printf("%ds vistos: %d\n", i + 1, vistos[i]);
-      if (vistos[i] != 1) {
-        continue;
-      }
-      for (int it = 0; it < 9; it++) {
-        pos = fila * 9 + it;
-        if (tablero->posibilidades[pos][i] == 1) {
-          marcar(tablero, pos, i + 1);
-        }
-      }
-    }
-  }
-}
-
-void unico_cuadrado(struct board *tablero) {
-  int vistos[9], pos;
-  for (int cuad = 0; cuad < 9; cuad++) {
-    // printf("\ncuad: %d\n", cuad);
-    for (int it = 0; it < 9; it++) {
-      vistos[it] = 0;
-    }
-
-    for (int it = 0; it < 9; it++) {
-      pos = cuad_it(cuad, it);
-      for (int i = 0; i < 9; i++) { // vistos += posibilidades[cuad_it(cuad,it)]
-        vistos[i] += tablero->posibilidades[pos][i];
-      }
-    }
-
-    for (int i = 0; i < 9; i++) {
-      // printf("%ds vistos: %d\n", i + 1, vistos[i]);
-      if (vistos[i] != 1) {
-        continue;
-      }
-      for (int it = 0; it < 9; it++) {
-        pos = cuad_it(cuad, it);
-        if (tablero->posibilidades[pos][i] == 1) {
-          marcar(tablero, pos, i + 1);
-        }
-      }
-    }
+  if (cambio == 1) {
+    unico_en_set(tablero);
   }
 }
 
@@ -278,8 +246,6 @@ int main() {
   // marcar(&tablero, 65, 8);
   // marcar(&tablero, 69, 9);
   // marcar(&tablero, 71, 7);
-  unico_cuadrado(&tablero);
-  unico_col(&tablero);
-  unico_fila(&tablero);
+  unico_en_set(&tablero);
   myprint(tablero);
 }
