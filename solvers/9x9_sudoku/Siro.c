@@ -124,6 +124,7 @@ void poblar(struct board *tablero, char *file) {
   }
 }
 
+// Escribe un valor en una casilla y lo imposibiliza en las de alrededor
 void marcar(struct board *tablero, int pos, int valor) {
   printf("%d ", pos);
   int fila, col, cuad, sum_fila, sum_col, sum_cuad, pos_fila, pos_col, pos_cuad;
@@ -131,11 +132,13 @@ void marcar(struct board *tablero, int pos, int valor) {
   col = pos % 9;
   cuad = col / 3 + (fila / 3) * 3;
 
+  // metemos el valor y quitamos posibilidades
   for (int i = 0; i < 9; i++) {
     tablero->posibilidades[pos][i] = 0;
   }
   tablero->real[pos] = valor;
-  for (int i = 0; i < 9; i++) {
+
+  for (int i = 0; i < 9; i++) { // quitamos posibilidades en los 3 sets
     for (int j = 0; j < 9; j++) {
       pos_fila = pos - col + i;
       pos_col = pos - 9 * fila + 9 * i;
@@ -151,6 +154,7 @@ void marcar(struct board *tablero, int pos, int valor) {
       }
     }
 
+    // si alguna casilla solo puede tener un numero tambien lo marcamos
     if (sum_fila == 1) {
       for (int j = 0; j < 9; j++) {
         if (tablero->posibilidades[pos_fila][j] == 1) {
@@ -179,7 +183,9 @@ void marcar(struct board *tablero, int pos, int valor) {
   }
 }
 
-void unico_en_set(struct board *tablero) {
+// Si algun numero solo puede ir en una posicion en su cuadrado/fila/columna lo
+// ponemos. Devuelve 1 si ha cambiado algo
+int unico_en_set(struct board *tablero) {
   int cambio = 0, vistos_cuad[9], vistos_fila[9], vistos_col[9], pos_cuad,
       pos_fila, pos_col;
   for (int set = 0; set < 9; set++) {
@@ -189,7 +195,7 @@ void unico_en_set(struct board *tablero) {
       vistos_col[it] = 0;
     }
 
-    // contamos cuantos de cada numero hay en fila, columna y cuadrado
+    // contamos cuantos de cada numero puede haber en fila, columna y cuadrado
     for (int it = 0; it < 9; it++) {
       pos_cuad = cuad_it(set, it);
       pos_fila = set * 9 + it;
@@ -232,9 +238,11 @@ void unico_en_set(struct board *tablero) {
       }
     }
   }
-  if (cambio == 1) {
+  if (cambio == 1) { // repetimos
     unico_en_set(tablero);
+    return 1;
   }
+  return 0;
 }
 
 int main() {
