@@ -65,6 +65,7 @@ void myprint(struct board tablero) {
 }
 
 void read(struct board *tablero, char *file) {
+  poner_a_cero(tablero);
   FILE *fi;
   fi = fopen(file, "r");
 
@@ -86,7 +87,8 @@ int cuad_it(int cuad, int it) {
   return base + it + (it / 3) * 6;
 }
 
-void poblar(struct board *tablero) {
+void poblar(struct board *tablero, char *file) {
+  read(tablero, file);
   int fila, col, cuad;
   int vistos[9];
   for (int i = 0; i < 81; i++) {
@@ -237,15 +239,7 @@ void unico_en_set(struct board *tablero) {
 
 int main() {
   struct board tablero;
-  poner_a_cero(&tablero);
-  read(&tablero, "sudoku2.txt");
-  poblar(&tablero);
-  // marcar(&tablero, 34, 5);
-  // marcar(&tablero, 51, 4);
-  // marcar(&tablero, 52, 7);
-  // marcar(&tablero, 65, 8);
-  // marcar(&tablero, 69, 9);
-  // marcar(&tablero, 71, 7);
+  poblar(&tablero, "sudoku2.txt");
   unico_en_set(&tablero);
   myprint(tablero);
 }
