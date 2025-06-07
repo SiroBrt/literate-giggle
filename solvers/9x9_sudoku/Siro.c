@@ -4,6 +4,7 @@
 #include <strings.h>
 
 char aux_str[1000];
+int iteracion = 0;
 
 struct board {
   int posibilidades[81][9];
@@ -53,8 +54,10 @@ void myprint(struct board tablero) {
     suma = 0;
     printf("%d: ", i);
     for (int j = 0; j < 9; j++) {
-      printf("%d ", tablero.posibilidades[i][j]);
-      suma += tablero.posibilidades[i][j];
+      if (tablero.posibilidades[i][j] == 1) {
+        printf("%d ", j + 1);
+        suma++;
+      }
     }
     if (suma == 1) {
       printf(" ok ");
@@ -181,6 +184,28 @@ void marcar(struct board *tablero, int pos, int valor) {
   }
 }
 
+int unica_opcion(struct board *tablero) {
+  int cambio = 0, suma;
+  for (int i = 0; i < 81; i++) {
+    if (tablero->real[i] != 0) {
+      continue;
+    }
+    suma = 0;
+    for (int j = 0; j < 9; j++) {
+      suma += tablero->posibilidades[i][j];
+    }
+    if (suma == 1) {
+      for (int j = 0; j < 9; j++) {
+        if (tablero->posibilidades[i][j] == 1) {
+          marcar(tablero, i, j + 1);
+          cambio = 1;
+        }
+      }
+    }
+  }
+  return cambio;
+}
+
 // Si algun numero solo puede ir en una posicion en su cuadrado/fila/columna lo
 // ponemos. Devuelve 1 si ha cambiado algo
 int unico_en_set(struct board *tablero) {
@@ -238,9 +263,8 @@ int unico_en_set(struct board *tablero) {
   }
   if (cambio == 1) { // repetimos
     unico_en_set(tablero);
-    return 1;
   }
-  return 0;
+  return cambio;
 }
 
 int serializar_posibilidades(struct board *tablero, int pos) {
@@ -346,7 +370,8 @@ int naked_subset(struct board *tablero) {
           num_cuad = serializar_posibilidades(tablero, pos_cuad);
           if (num_cuad != patrones_cuad[i]) {
             for (int k = 0; k < 9; k++) {
-              if (tablero->posibilidades[pos_cuad][k] == aux[k]) {
+              if (tablero->posibilidades[pos_cuad][k] == aux[k] &&
+                  aux[k] == 1) {
                 cambio = 1;
                 tablero->posibilidades[pos_cuad][k] -= aux[k];
               }
@@ -363,7 +388,8 @@ int naked_subset(struct board *tablero) {
           num_fila = serializar_posibilidades(tablero, pos_fila);
           if (num_fila != patrones_fila[i]) {
             for (int k = 0; k < 9; k++) {
-              if (tablero->posibilidades[pos_fila][k] == aux[k]) {
+              if (tablero->posibilidades[pos_fila][k] == aux[k] &&
+                  aux[k] == 1) {
                 cambio = 1;
                 tablero->posibilidades[pos_fila][k] -= aux[k];
               }
@@ -380,7 +406,7 @@ int naked_subset(struct board *tablero) {
           num_col = serializar_posibilidades(tablero, pos_col);
           if (num_col != patrones_col[i]) {
             for (int k = 0; k < 9; k++) {
-              if (tablero->posibilidades[pos_col][k] == aux[k]) {
+              if (tablero->posibilidades[pos_col][k] == aux[k] && aux[k] == 1) {
                 cambio = 1;
                 tablero->posibilidades[pos_col][k] -= aux[k];
               }
@@ -390,18 +416,327 @@ int naked_subset(struct board *tablero) {
       }
     }
   }
-  if (cambio == 1) {
-    return 1;
+  return cambio;
+}
+
+int cuad_linea(struct board *tablero) {
+  int cambio = 0;
+  int fila1[9], fila2[9], fila3[9], suma_fila[9], fila;
+  int col1[9], col2[9], col3[9], suma_col[9], col;
+  for (int cuad = 0; cuad < 9; cuad++) {
+    for (int i = 0; i < 9; i++) {
+      fila1[i] = 0;
+      fila2[i] = 0;
+      fila3[i] = 0;
+      suma_fila[i] = 0;
+      col1[i] = 0;
+      col2[i] = 0;
+      col3[i] = 0;
+      suma_col[i] = 0;
+    }
+    for (int i = 0; i < 3; i++) {
+      for (int num = 0; num < 9; num++) {
+        if (tablero->posibilidades[cuad_it(cuad, i)][num] == 1) {
+          fila1[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(cuad, i + 3)][num] == 1) {
+          fila2[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(cuad, i + 6)][num] == 1) {
+          fila3[num] = 1;
+        }
+        suma_fila[num] = fila1[num] + fila2[num] + fila3[num];
+
+        if (tablero->posibilidades[cuad_it(cuad, i * 3)][num] == 1) {
+          col1[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(cuad, i * 3 + 1)][num] == 1) {
+          col2[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(cuad, i * 3 + 2)][num] == 1) {
+          col3[num] = 1;
+        }
+        suma_col[num] = col1[num] + col2[num] + col3[num];
+      }
+    }
+
+    for (int i = 0; i < 9; i++) {
+      if (suma_fila[i] == 1) {
+        if (fila1[i] == 1) {
+          fila = 0 + (cuad / 3) * 3;
+        } else if (fila2[i] == 1) {
+          fila = 1 + (cuad / 3) * 3;
+        } else {
+          fila = 2 + (cuad / 3) * 3;
+        }
+        for (int j = 0; j < 9; j++) {
+          if ((cuad % 3) * 3 <= j && j < ((cuad % 3) + 1) * 3) {
+            continue;
+          }
+          if (tablero->posibilidades[fila * 9 + j][i] == 1) {
+            tablero->posibilidades[fila * 9 + j][i] = 0;
+            cambio = 1;
+          }
+        }
+      }
+
+      if (suma_col[i] == 1) {
+        if (col1[i] == 1) {
+          col = 0 + (cuad % 3) * 3;
+        } else if (col2[i] == 1) {
+          col = 1 + (cuad % 3) * 3;
+        } else {
+          col = 2 + (cuad % 3) * 3;
+        }
+        for (int j = 0; j < 9; j++) {
+          if ((cuad / 3) * 3 <= j && j < ((cuad / 3) + 1) * 3) {
+            continue;
+          }
+          if (tablero->posibilidades[col + 9 * j][i] == 1) {
+            tablero->posibilidades[col + 9 * j][i] = 0;
+            cambio = 1;
+          }
+        }
+      }
+    }
+  }
+
+  return cambio;
+}
+
+int fila_cuad(struct board *tablero) {
+  int cambio = 0;
+  int cuad1[9], cuad2[9], cuad3[9], cuad;
+  for (int set = 0; set < 9; set++) {
+    for (int i = 0; i < 9; i++) {
+      cuad1[i] = 0;
+      cuad2[i] = 0;
+      cuad3[i] = 0;
+    }
+    for (int num = 0; num < 9; num++) {
+      for (int pos = 0; pos < 3; pos++) {
+        if (tablero->posibilidades[cuad_it((set / 3) * 3 + 0,
+                                           pos + (set % 3) * 3)][num] == 1) {
+          cuad1[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it((set / 3) * 3 + 1,
+                                           pos + (set % 3) * 3)][num] == 1) {
+          cuad2[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it((set / 3) * 3 + 2,
+                                           pos + (set % 3) * 3)][num] == 1) {
+          cuad3[num] = 1;
+        }
+      }
+      if (cuad1[num] + cuad2[num] + cuad3[num] == 1) {
+        if (cuad1[num] == 1) {
+          cuad = 0 + (set / 3) * 3;
+        } else if (cuad2[num] == 1) {
+          cuad = 1 + (set / 3) * 3;
+        } else {
+          cuad = 2 + (set / 3) * 3;
+        }
+        for (int i = 0; i < 9; i++) {
+          if ((set % 3) * 3 <= i && i < ((set % 3) + 1) * 3) {
+            continue;
+          }
+          if (tablero->posibilidades[cuad_it(cuad, i)][num] == 1) {
+            tablero->posibilidades[cuad_it(cuad, i)][num] = 0;
+            cambio = 1;
+          }
+        }
+      }
+    }
+  }
+  return cambio;
+}
+
+// Si en una columna todos los {num} ocurren en el mismo cuadrado, ese cuadrado
+// solo tiene {num} en esa columna
+int col_cuad(struct board *tablero) {
+  int cambio = 0;
+  int cuad1[9], cuad2[9], cuad3[9], cuad;
+  for (int set = 0; set < 9; set++) {
+    for (int i = 0; i < 9; i++) {
+      cuad1[i] = 0;
+      cuad2[i] = 0;
+      cuad3[i] = 0;
+    }
+    for (int num = 0; num < 9; num++) {
+      for (int pos = 0; pos < 3; pos++) {
+        if (tablero->posibilidades[cuad_it(0 + set / 3, pos * 3 + set % 3)]
+                                  [num] == 1) {
+          cuad1[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(3 + set / 3, pos * 3 + set % 3)]
+                                  [num] == 1) {
+          cuad2[num] = 1;
+        }
+        if (tablero->posibilidades[cuad_it(6 + set / 3, pos * 3 + set % 3)]
+                                  [num] == 1) {
+          cuad3[num] = 1;
+        }
+      }
+      if (cuad1[num] + cuad2[num] + cuad3[num] == 1) {
+        if (cuad1[num] == 1) {
+          cuad = 0 + (set / 3);
+        } else if (cuad2[num] == 1) {
+          cuad = 3 + (set / 3);
+        } else {
+          cuad = 6 + (set / 3);
+        }
+        for (int i = 0; i < 9; i++) {
+          if ((set - i) % 3 == 0) {
+            continue;
+          }
+          if (tablero->posibilidades[cuad_it(cuad, i)][num] == 1) {
+            tablero->posibilidades[cuad_it(cuad, i)][num] = 0;
+            cambio = 1;
+          }
+        }
+      }
+    }
+  }
+  return cambio;
+}
+
+struct board copiar_tablero(struct board tablero) {
+  struct board copia;
+  for (int pos = 0; pos < 9; pos++) {
+    copia.real[pos] = tablero.real[pos];
+    for (int num = 0; num < 9; num++) {
+      copia.posibilidades[pos][num] = tablero.posibilidades[pos][num];
+    }
+  }
+  return copia;
+}
+
+int errores(struct board tablero) {
+  int suma, vistos_cuad[9], vistos_fila[9], vistos_col[9], num_cuad, num_col,
+      num_fila;
+  for (int pos = 0; pos < 81; pos++) {
+    suma = 0;
+    for (int i = 0; i < 9; i++) {
+      suma += tablero.posibilidades[pos][i];
+    }
+    if (suma == 0 && tablero.real[pos] == 0) {
+      return 1;
+    }
+  }
+  for (int set = 0; set < 9; set++) {
+    for (int i = 0; i < 9; i++) {
+      vistos_cuad[i] = 0;
+      vistos_fila[i] = 0;
+      vistos_col[i] = 0;
+    }
+    for (int i = 0; i < 9; i++) {
+      num_cuad = tablero.real[cuad_it(set, i)];
+      num_fila = tablero.real[set * 9 + i];
+      num_col = tablero.real[set + 9 * i];
+      if (num_cuad != 0) {
+        if (vistos_cuad[num_cuad - 1] == 1) {
+          return 1;
+        }
+        vistos_cuad[num_cuad - 1]++;
+      }
+      if (num_fila != 0) {
+        if (vistos_fila[num_fila - 1] == 1) {
+          return 1;
+        }
+        vistos_fila[num_fila - 1]++;
+      }
+      if (num_col != 0) {
+        if (vistos_col[num_col - 1] == 1) {
+          return 1;
+        }
+        vistos_col[num_col - 1]++;
+      }
+    }
   }
   return 0;
 }
 
-void solve(struct board *tablero) {
-  int cambio = 1;
-  while (cambio != 0) {
-    cambio = 0;
-    cambio += unico_en_set(tablero);
-    cambio += naked_subset(tablero);
+void heuristica(struct board tablero, int *recommendation) {
+  int suma, candidatos2[81], candidatos3[81], index2 = 0, index3 = 0;
+
+  for (int pos = 0; pos < 81; pos++) {
+    suma = 0;
+    for (int i = 0; i < 9; i++) {
+      suma += tablero.posibilidades[pos][i];
+    }
+    if (suma == 2) {
+      candidatos2[index2] = pos;
+      index2++;
+    } else if (suma == 3) {
+      candidatos3[index3] = pos;
+      index3++;
+    }
+  }
+  if (index2 != 0) {
+    for (int cand = 0; cand < index2; cand++) {
+      for (int i = 0; i < 9; i++) {
+        if (tablero.posibilidades[candidatos2[cand]][i] == 0) {
+          continue;
+        }
+
+        suma = 0;
+
+        contar_posibilidades();
+        // i es posible en pos, vamos a ver cuantos quitaria
+      }
+    }
+
+    return;
+  }
+  if (index3 != 0) {
+
+    return;
+  }
+}
+
+int solve(struct board *tablero) {
+  int cambio;
+  while (1) {
+    cambio = 1;
+    while (cambio != 0) {
+      cambio = 0;
+      printf("it: %d\n", iteracion);
+      cambio += unico_en_set(tablero);
+      cambio += unica_opcion(tablero);
+      cambio += naked_subset(tablero);
+      cambio += cuad_linea(tablero);
+      cambio += fila_cuad(tablero);
+      cambio += col_cuad(tablero);
+      if (errores(*tablero)) {
+        return -1;
+      }
+      iteracion++;
+    }
+    for (int i = 0; i < 81; i++) {
+      if (tablero->real[i] == 0) {
+        cambio = 1;
+        break;
+      }
+    }
+    if (cambio == 0) {
+      return 1;
+    }
+    struct board prueba;
+    prueba = copiar_tablero(*tablero);
+
+    int recommendation[2]; // pos, valor
+    // heuristica(prueba, &result);
+    prueba.real[recommendation[0]] = recommendation[1];
+    int output;
+    output = solve(&prueba);
+    if (output == -1) {
+      tablero->posibilidades[recommendation[0]][recommendation[1]] = 0;
+      if (errores(*tablero)) {
+        return -1;
+      }
+    } else if (output == 1) {
+      return 1;
+    }
   }
 }
 
@@ -409,7 +744,8 @@ int main(int argc, char *argv[]) {
   if (argc == 2) {
     struct board tablero;
     poblar(&tablero, argv[1]);
-    solve(&tablero);
+    tablero.posibilidades[21][8] = 0;
+    printf("%d\n", solve(&tablero));
     myprint(tablero);
   }
 }
