@@ -287,7 +287,10 @@ void deserializar_posibilidades(int *output, int num) {
   }
 }
 
-int naked_subset(struct board *tablero) {
+// si un conjunto de posibilidades de tamaño n se repite n veces en el mismo
+// cuad/linea/col sabes que esas posibilidades no son posibles en ninguna otra
+// posicion del cuad/linea/col
+int naked_subset(struct board *tablero) { // arreglar si eso
   int patrones_cuad[9], cuenta_cuad[9], composicion_cuad[9], pos_cuad, num_cuad,
       index_cuad, found_cuad;
   int patrones_fila[9], cuenta_fila[9], composicion_fila[9], pos_fila, num_fila,
