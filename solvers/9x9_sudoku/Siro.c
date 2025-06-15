@@ -600,15 +600,13 @@ int col_cuad(struct board *tablero) {
   return cambio;
 }
 
-struct board copiar_tablero(struct board tablero) {
-  struct board copia;
-  for (int pos = 0; pos < 9; pos++) {
-    copia.real[pos] = tablero.real[pos];
+void copiar_tablero(struct board *tablero, struct board *copia) {
+  for (int pos = 0; pos < 81; pos++) {
+    copia->real[pos] = tablero->real[pos];
     for (int num = 0; num < 9; num++) {
-      copia.posibilidades[pos][num] = tablero.posibilidades[pos][num];
+      copia->posibilidades[pos][num] = tablero->posibilidades[pos][num];
     }
   }
-  return copia;
 }
 
 int errores(struct board tablero) {
@@ -657,9 +655,20 @@ int errores(struct board tablero) {
 }
 
 void heuristica(struct board tablero, int *recommendation) {
-  int suma, candidatos2[81], candidatos3[81], index2 = 0, index3 = 0;
+  int suma, candidatos2[81], candidatos3[81],
+      index2 = 0, index3 = 0, puntos_best = 1, pos = 0, cuad, fila, col;
 
-  for (int pos = 0; pos < 81; pos++) {
+  for (pos = 0; pos < 81; pos++) { // inicializamos recommendation
+    for (int i = 0; i < 9; i++) {
+      if (tablero.posibilidades[pos][i] != 0) {
+        recommendation[0] = pos;
+        recommendation[1] = i;
+        break;
+      }
+    }
+  }
+
+  for (pos = 0; pos < 81; pos++) {
     suma = 0;
     for (int i = 0; i < 9; i++) {
       suma += tablero.posibilidades[pos][i];
@@ -674,43 +683,95 @@ void heuristica(struct board tablero, int *recommendation) {
   }
   if (index2 != 0) {
     for (int cand = 0; cand < index2; cand++) {
-      for (int i = 0; i < 9; i++) {
-        if (tablero.posibilidades[candidatos2[cand]][i] == 0) {
+      pos = candidatos2[cand];
+      for (int value = 0; value < 9; value++) {
+        if (tablero.posibilidades[pos][value] == 0) {
           continue;
         }
+        fila = pos / 9;
+        col = pos % 9;
+        cuad = col / 3 + (fila / 3) * 3;
 
-        suma = 0;
+        suma = -3;
 
-        contar_posibilidades();
         // i es posible en pos, vamos a ver cuantos quitaria
+        for (int it = 0; it < 9; it++) {
+          suma += tablero.posibilidades[cuad_it(cuad, it)][value];
+          suma += tablero.posibilidades[col + 9 * it][value];
+          suma += tablero.posibilidades[fila * 9 + it][value];
+        }
+
+        if (suma > puntos_best) {
+          recommendation[0] = pos;
+          recommendation[1] = value;
+          puntos_best = suma;
+        }
       }
     }
 
     return;
   }
   if (index3 != 0) {
+    printf("Hay un 3\n");
+    for (int cand = 0; cand < index3; cand++) {
+      pos = candidatos3[cand];
+      for (int value = 0; value < 9; value++) {
+        if (tablero.posibilidades[pos][value] == 0) {
+          continue;
+        }
+        fila = pos / 9;
+        col = pos % 9;
+        cuad = col / 3 + (fila / 3) * 3;
+
+        suma = -3;
+
+        for (int it = 0; it < 9; it++) {
+          suma += tablero.posibilidades[cuad_it(cuad, it)][value];
+          suma += tablero.posibilidades[col + 9 * it][value];
+          suma += tablero.posibilidades[fila * 9 + it][value];
+        }
+
+        if (suma > puntos_best) {
+          recommendation[0] = pos;
+          recommendation[1] = value;
+          puntos_best = suma;
+        }
+      }
+    }
 
     return;
   }
 }
 
-int solve(struct board *tablero) {
-  int cambio;
+int solve(struct board *tablero, int prof) {
+  int cambio = 0;
+  for (int pos = 0; pos < 81; pos++) {
+    if (tablero->real[pos] == 0) {
+      cambio = 1;
+      break;
+    }
+  }
+  if (cambio == 0) {
+    if (errores(*tablero)) {
+      return -1;
+    }
+    return 1;
+  }
+
   while (1) {
     cambio = 1;
     while (cambio != 0) {
       cambio = 0;
-      printf("it: %d\n", iteracion);
+      iteracion++;
       cambio += unico_en_set(tablero);
       cambio += unica_opcion(tablero);
-      cambio += naked_subset(tablero);
+      // cambio += naked_subset(tablero);
       cambio += cuad_linea(tablero);
       cambio += fila_cuad(tablero);
       cambio += col_cuad(tablero);
       if (errores(*tablero)) {
         return -1;
       }
-      iteracion++;
     }
     for (int i = 0; i < 81; i++) {
       if (tablero->real[i] == 0) {
@@ -722,19 +783,20 @@ int solve(struct board *tablero) {
       return 1;
     }
     struct board prueba;
-    prueba = copiar_tablero(*tablero);
+    copiar_tablero(tablero, &prueba);
 
     int recommendation[2]; // pos, valor
-    // heuristica(prueba, &result);
-    prueba.real[recommendation[0]] = recommendation[1];
+    heuristica(prueba, recommendation);
+    marcar(&prueba, recommendation[0], recommendation[1] + 1);
     int output;
-    output = solve(&prueba);
+    output = solve(&prueba, prof + 1);
     if (output == -1) {
       tablero->posibilidades[recommendation[0]][recommendation[1]] = 0;
       if (errores(*tablero)) {
         return -1;
       }
     } else if (output == 1) {
+      copiar_tablero(&prueba, tablero);
       return 1;
     }
   }
@@ -742,10 +804,14 @@ int solve(struct board *tablero) {
 
 int main(int argc, char *argv[]) {
   if (argc == 2) {
+    int output;
     struct board tablero;
     poblar(&tablero, argv[1]);
     tablero.posibilidades[21][8] = 0;
-    printf("%d\n", solve(&tablero));
-    myprint(tablero);
+    output = solve(&tablero, 0);
+    if (output == 1) {
+      myprint(tablero);
+      printf("iteraciones: %d\n", iteracion);
+    }
   }
 }
